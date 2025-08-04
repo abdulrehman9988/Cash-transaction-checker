@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Transaction Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #6b73ff 0%, #000dff 100%);
+        }
+        .transaction-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .status-paid {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status-unpaid {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        .status-partial {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="gradient-bg text-white rounded-xl p-6 mb-8 shadow-lg">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold">Cash Transaction Manager</h1>
+                    <p class="mt-2 opacity-90">Track your payments and calculate pending amounts</p>
+                </div>
+                <div class="bg-white/20 p-3 rounded-full">
+                    <i class="fas fa-wallet text-3xl"></i>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Transaction Form -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Add New Transaction</h2>
+                <form id="transactionForm" class="space-y-4">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                        <input type="text" id="name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="service" class="block text-sm font-medium text-gray-700 mb-1">Service Name</label>
+                        <input type="text" id="service" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
+                        <input type="number" id="amount" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                        <textarea id="notes" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. Payment for the work done on XYZ"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label for="dueDate" class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                        <input type="date" id="dueDate" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    
+                    <div>
+                        <label for="paidAmount" class="block text-sm font-medium text-gray-700 mb-1">Amount Paid (₹)</label>
+                        <input type="number" id="paidAmount" value="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <button type="submit" class="w-full gradient-bg text-white py-3 px-4 rounded-lg font-medium hover:opacity-90 transition duration-300 flex items-center justify-center">
+                        <i class="fas fa-save mr-2"></i> Save Transaction
+                    </button>
+                </form>
+            </div>
+
+            <!-- Payment Calculator -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Payment Calculator</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="calcAmount" class="block text-sm font-medium text-gray-700 mb-1">Total Amount (₹)</label>
+                        <input type="number" id="calcAmount" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="calcPaid" class="block text-sm font-medium text-gray-700 mb-1">Amount Paid (₹)</label>
+                        <input type="number" id="calcPaid" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <button id="calculateBtn" class="w-full gradient-bg text-white py-3 px-4 rounded-lg font-medium hover:opacity-90 transition duration-300 flex items-center justify-center">
+                        <i class="fas fa-calculator mr-2"></i> Calculate Payments
+                    </button>
+                    
+                    <div id="calculationResult" class="mt-6">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h3 class="font-medium text-gray-800 mb-3">Payment Summary</h3>
+                            <div id="paymentDetails" class="max-h-60 overflow-y-auto scrollbar-hide space-y-2"></div>
+                            <div class="mt-4 pt-3 border-t">
+                                <div class="flex justify-between font-medium text-gray-800">
+                                    <span>Total Amount:</span>
+                                    <span id="totalAmount">₹0</span>
+                                </div>
+                                <div class="flex justify-between text-green-600">
+                                    <span>Total Paid:</span>
+                                    <span id="totalPaid">₹0</span>
+                                </div>
+                                <div class="flex justify-between text-red-600">
+                                    <span>Pending Amount:</span>
+                                    <span id="pendingAmount">₹0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction List -->
+        <div class="mt-8 bg-white rounded-xl shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Transaction History</h2>
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="Search transactions..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionList" class="bg-white divide-y divide-gray-200">
+                        <!-- Transactions will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="noTransactions" class="text-center py-8 text-gray-500">
+                <i class="fas fa-exchange-alt text-4xl mb-2"></i>
+                <p>No transactions found. Add your first transaction above.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Transaction Modal -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Edit Transaction</h3>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="editForm" class="space-y-4">
+                <input type="hidden" id="editId">
+                <div>
+                    <label for="editName" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <input type="text" id="editName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="editService" class="block text-sm font-medium text-gray-700 mb-1">Service Name</label>
+                    <input type="text" id="editService" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="editAmount" class="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
+                    <input type="number" id="editAmount" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="editNotes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                    <textarea id="editNotes" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                
+                <div>
+                    <label for="editDueDate" class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                    <input type="date" id="editDueDate" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                
+                <div>
+                    <label for="editPaidAmount" class="block text-sm font-medium text-gray-700 mb-1">Amount Paid (₹)</label>
+                    <input type="number" id="editPaidAmount" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="submit" class="flex-1 gradient-bg text-white py-3 px-4 rounded-lg font-medium hover:opacity-90 transition duration-300">
+                        <i class="fas fa-save mr-2"></i> Update
+                    </button>
+                    <button type="button" id="deleteBtn" class="flex-1 bg-red-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-600 transition duration-300">
+                        <i class="fas fa-trash mr-2"></i> Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initialize transactions array from localStorage or empty array
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        
+        // DOM Elements
+        const transactionForm = document.getElementById('transactionForm');
+        const transactionList = document.getElementById('transactionList');
+        const noTransactions = document.getElementById('noTransactions');
+        const editModal = document.getElementById('editModal');
+        const editForm = document.getElementById('editForm');
+        const closeModal = document.getElementById('closeModal');
+        const deleteBtn = document.getElementById('deleteBtn');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const calculationResult = document.getElementById('calculationResult');
+        const paymentDetails = document.getElementById('paymentDetails');
+        const totalAmount = document.getElementById('totalAmount');
+        const totalPaid = document.getElementById('totalPaid');
+        const pendingAmount = document.getElementById('pendingAmount');
+        const searchInput = document.getElementById('searchInput');
+        
+        // Form submission - Add/Update transaction
+        transactionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const service = document.getElementById('service').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const notes = document.getElementById('notes').value;
+            const dueDate = document.getElementById('dueDate').value;
+            const newPaidAmount = parseFloat(document.getElementById('paidAmount').value) || 0;
+            
+            // Check if transaction with same name AND service exists
+            const existingIndex = transactions.findIndex(t => t.name === name && t.service === service);
+            
+            if (existingIndex !== -1) {
+                // Update existing transaction
+                const existing = transactions[existingIndex];
+                const totalPaid = existing.paidAmount + newPaidAmount;
+                const status = totalPaid >= amount ? 'paid' : (totalPaid > 0 ? 'partial' : 'unpaid');
+                
+                transactions[existingIndex] = {
+                    ...existing,
+                    service,
+                    amount,
+                    notes,
+                    dueDate,
+                    status,
+                    paidAmount: totalPaid
+                };
+                
+                showNotification('Transaction updated successfully!', 'success');
+            } else {
+                // Create new transaction
+                const status = newPaidAmount >= amount ? 'paid' : (newPaidAmount > 0 ? 'partial' : 'unpaid');
+                
+                const transaction = {
+                    id: Date.now(),
+                    name,
+                    service,
+                    amount,
+                    notes,
+                    dueDate,
+                    status,
+                    paidAmount: newPaidAmount,
+                    createdAt: new Date().toISOString()
+                };
+                
+                transactions.push(transaction);
+                showNotification('Transaction added successfully!', 'success');
+            }
+            saveTransactions();
+            renderTransactions();
+            transactionForm.reset();
+            
+            // Show success notification
+            showNotification('Transaction added successfully!', 'success');
+        });
+        
+        // Edit form submission
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = parseInt(document.getElementById('editId').value);
+            const name = document.getElementById('editName').value;
+            const service = document.getElementById('editService').value;
+            const amount = parseFloat(document.getElementById('editAmount').value);
+            const notes = document.getElementById('editNotes').value;
+            const dueDate = document.getElementById('editDueDate').value;
+            const newPaidAmount = parseFloat(document.getElementById('editPaidAmount').value) || 0;
+            
+            const index = transactions.findIndex(t => t.id === id);
+            if (index !== -1) {
+                const existing = transactions[index];
+                const totalPaid = newPaidAmount; // For edit, we replace the paid amount
+                const status = totalPaid >= amount ? 'paid' : (totalPaid > 0 ? 'partial' : 'unpaid');
+                
+                transactions[index] = {
+                    ...existing,
+                    name,
+                    service,
+                    amount,
+                    notes,
+                    dueDate,
+                    status,
+                    paidAmount: totalPaid
+                };
+                
+                saveTransactions();
+                renderTransactions();
+                updateServiceDropdowns();
+                editModal.classList.add('hidden');
+                
+                // Show success notification
+                showNotification('Transaction updated successfully!', 'success');
+            }
+        });
+        
+        // Delete transaction
+        deleteBtn.addEventListener('click', function() {
+            const id = parseInt(document.getElementById('editId').value);
+            transactions = transactions.filter(t => t.id !== id);
+            saveTransactions();
+            renderTransactions();
+            updateServiceDropdowns();
+            editModal.classList.add('hidden');
+            
+            // Show success notification
+            showNotification('Transaction deleted successfully!', 'success');
+        });
+        
+        // Close modal
+        closeModal.addEventListener('click', function() {
+            editModal.classList.add('hidden');
+        });
+        
+        // Calculate payments
+        calculateBtn.addEventListener('click', function() {
+            const amount = parseFloat(document.getElementById('calcAmount').value) || 0;
+            const paid = parseFloat(document.getElementById('calcPaid').value) || 0;
+            const pending = amount - paid;
+            
+            // Update UI
+            paymentDetails.innerHTML = `
+                <div class="flex justify-between items-center py-2 px-3 bg-white rounded">
+                    <div>
+                        <span class="font-medium">Payment Summary</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="block font-medium">₹${paid.toFixed(2)} paid</span>
+                        <span class="text-sm ${pending > 0 ? 'text-red-500' : 'text-green-500'}">
+                            ${pending > 0 ? `₹${pending.toFixed(2)} pending` : 'Fully paid'}
+                        </span>
+                    </div>
+                </div>
+            `;
+            
+            totalAmount.textContent = `₹${amount.toFixed(2)}`;
+            totalPaid.textContent = `₹${paid.toFixed(2)}`;
+            pendingAmount.textContent = `₹${pending.toFixed(2)}`;
+            
+            calculationResult.classList.remove('hidden');
+        });
+        
+        // Search transactions
+        searchInput.addEventListener('input', function() {
+            renderTransactions();
+        });
+        
+        // Helper functions
+        function saveTransactions() {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+        }
+        
+        function renderTransactions() {
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            let filteredTransactions = [...transactions];
+            
+            if (searchTerm) {
+                filteredTransactions = filteredTransactions.filter(t => 
+                    t.name.toLowerCase().includes(searchTerm) || 
+                    t.service.toLowerCase().includes(searchTerm) ||
+                    t.notes.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (filteredTransactions.length === 0) {
+                transactionList.innerHTML = '';
+                noTransactions.classList.remove('hidden');
+                return;
+            }
+            
+            noTransactions.classList.add('hidden');
+            
+            // Sort by due date (ascending)
+            filteredTransactions.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            
+            transactionList.innerHTML = filteredTransactions.map(t => `
+                <tr class="transaction-card transition duration-300 hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="font-medium text-gray-900">${t.name}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-gray-700">${t.service}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-gray-700">₹${t.amount.toFixed(2)}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-gray-700 max-w-xs truncate" title="${t.notes}">${t.notes}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-gray-700">${formatDate(t.dueDate)}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full ${t.paidAmount >= t.amount ? 'status-paid' : (t.paidAmount > 0 ? 'status-partial' : 'status-unpaid')}">
+                            ${t.paidAmount >= t.amount ? 'Paid' : (t.paidAmount > 0 ? 'Partial' : 'Unpaid')}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="editTransaction(${t.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteTransaction(${t.id})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function editTransaction(id) {
+            const transaction = transactions.find(t => t.id === id);
+            if (transaction) {
+                document.getElementById('editId').value = transaction.id;
+                document.getElementById('editName').value = transaction.name;
+                document.getElementById('editService').value = transaction.service;
+                document.getElementById('editAmount').value = transaction.amount;
+                document.getElementById('editNotes').value = transaction.notes;
+                document.getElementById('editDueDate').value = transaction.dueDate;
+                document.getElementById('editPaidAmount').value = transaction.paidAmount;
+                
+                editModal.classList.remove('hidden');
+            }
+        }
+        
+        function deleteTransaction(id) {
+            if (confirm('Are you sure you want to delete this transaction?')) {
+                transactions = transactions.filter(t => t.id !== id);
+                saveTransactions();
+                renderTransactions();
+                updateServiceDropdowns();
+                
+                // Show success notification
+                showNotification('Transaction deleted successfully!', 'success');
+            }
+        }
+        
+        
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-US', options);
+        }
+        
+        function getStatusText(status) {
+            const statusMap = {
+                'paid': 'Paid',
+                'unpaid': 'Unpaid',
+                'partial': 'Partial'
+            };
+            return statusMap[status] || status;
+        }
+        
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-medium flex items-center ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            notification.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
+        
+        // Initialize the app
+        function init() {
+            renderTransactions();
+            updateServiceDropdowns();
+        }
+        
+        // Global functions
+        window.editTransaction = editTransaction;
+        window.deleteTransaction = deleteTransaction;
+        
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
