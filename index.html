@@ -26,15 +26,62 @@
             background-color: #fef3c7;
             color: #92400e;
         }
+        .border-green-200 {
+            border-color: #bbf7d0;
+        }
+        .bg-green-50 {
+            background-color: #f0fdf4;
+        }
+        .border-yellow-200 {
+            border-color: #fef08a;
+        }
+        .bg-yellow-50 {
+            background-color: #fefce8;
+        }
+        .border-red-200 {
+            border-color: #fecaca;
+        }
+        .bg-red-50 {
+            background-color: #fef2f2;
+        }
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
+        }
+        @media (max-width: 640px) {
+            .transaction-card {
+                padding: 1rem;
+                margin-bottom: 1rem;
+                border-radius: 0.5rem;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            .transaction-card > td {
+                padding: 0.5rem 0;
+                display: block;
+            }
+            .transaction-card > td:before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #4b5563;
+                display: block;
+                margin-bottom: 0.25rem;
+            }
+            .transaction-card > td > div {
+                display: block;
+                text-align: left;
+                margin-bottom: 0.5rem;
+            }
+            .transaction-card > td:last-child > div {
+                display: flex;
+                justify-content: flex-end;
+                gap: 0.5rem;
+            }
         }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         <!-- Header -->
-        <header class="gradient-bg text-white rounded-xl p-6 mb-8 shadow-lg">
+        <header class="gradient-bg text-white rounded-xl p-4 sm:p-6 mb-4 sm:mb-8 shadow-lg">
             <div class="flex justify-between items-center">
                 <div>
                     <h1 class="text-3xl font-bold">Cash Transaction Manager</h1>
@@ -46,9 +93,9 @@
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
             <!-- Transaction Form -->
-            <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-6">
                 <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Add New Transaction</h2>
                 <form id="transactionForm" class="space-y-4">
                     <div>
@@ -107,7 +154,7 @@
                     </button>
                     
                     <div id="calculationResult" class="mt-6">
-                        <div class="bg-gray-50 p-4 rounded-lg">
+                        <div id="paymentSummary" class="bg-gray-50 p-4 rounded-lg">
                             <h3 class="font-medium text-gray-800 mb-3">Payment Summary</h3>
                             <div id="paymentDetails" class="max-h-60 overflow-y-auto scrollbar-hide space-y-2"></div>
                             <div class="mt-4 pt-3 border-t">
@@ -132,25 +179,24 @@
 
         <!-- Transaction List -->
         <div class="mt-8 bg-white rounded-xl shadow-md p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold text-gray-800">Transaction History</h2>
-                <div class="relative">
-                    <input type="text" id="searchInput" placeholder="Search transactions..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                </div>
+            <h2 class="text-xl font-semibold text-gray-800 mb-2">Transaction History</h2>
+            <div class="relative w-full mb-4 sm:w-auto sm:float-right">
+                <input type="text" id="searchInput" placeholder="Search..." class="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
             </div>
+            <div class="clear-both"></div>
             
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-gray-50 hidden sm:table-header-group">
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                            <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th scope="col" class="hidden md:table-cell px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                            <th scope="col" class="hidden sm:table-cell px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                            <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="transactionList" class="bg-white divide-y divide-gray-200">
@@ -167,8 +213,8 @@
     </div>
 
     <!-- Edit Transaction Modal -->
-    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md">
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden px-2 sm:px-4">
+        <div class="bg-white rounded-xl p-4 sm:p-6 w-full max-w-md mx-2 sm:mx-4">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold">Edit Transaction</h3>
                 <button id="closeModal" class="text-gray-500 hover:text-gray-700">
@@ -380,6 +426,26 @@
             totalPaid.textContent = `₹${paid.toFixed(2)}`;
             pendingAmount.textContent = `₹${pending.toFixed(2)}`;
             
+            // Update summary colors based on payment status
+            const paymentSummary = document.getElementById('paymentSummary');
+            
+            // First remove all possible classes
+            paymentSummary.classList.remove(
+                'border-green-200', 'bg-green-50',
+                'border-red-200', 'bg-red-50'
+            );
+            
+            // Add appropriate classes based on status
+            if (pending <= 0) {
+                paymentSummary.classList.add('border-green-200', 'bg-green-50');
+                pendingAmount.classList.remove('text-red-600');
+                pendingAmount.classList.add('text-green-600');
+            } else {
+                paymentSummary.classList.add('border-red-200', 'bg-red-50');
+                pendingAmount.classList.remove('text-green-600');
+                pendingAmount.classList.add('text-red-600');
+            }
+            
             calculationResult.classList.remove('hidden');
         });
         
@@ -418,34 +484,36 @@
             filteredTransactions.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
             
             transactionList.innerHTML = filteredTransactions.map(t => `
-                <tr class="transaction-card transition duration-300 hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap">
+                <tr class="transaction-card transition duration-300 hover:bg-gray-50 block sm:table-row mb-4 sm:mb-0 border-b sm:border-b-0 bg-white rounded-lg shadow-sm sm:shadow-none">
+                    <td data-label="Name" class="px-3 sm:px-6 py-3 sm:py-4 block sm:table-cell">
                         <div class="font-medium text-gray-900">${t.name}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td data-label="Service" class="px-3 sm:px-6 py-3 sm:py-4 block sm:table-cell">
                         <div class="text-gray-700">${t.service}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td data-label="Amount" class="px-3 sm:px-6 py-3 sm:py-4 block sm:table-cell">
                         <div class="text-gray-700">₹${t.amount.toFixed(2)}</div>
                     </td>
-                    <td class="px-6 py-4">
-                        <div class="text-gray-700 max-w-xs truncate" title="${t.notes}">${t.notes}</div>
+                    <td data-label="Notes" class="px-3 sm:px-6 py-3 sm:py-4 block sm:table-cell">
+                        <div class="text-gray-700">${t.notes || '-'}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td data-label="Due Date" class="px-3 sm:px-6 py-3 sm:py-4 block sm:table-cell">
                         <div class="text-gray-700">${formatDate(t.dueDate)}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td data-label="Status" class="px-3 sm:px-6 py-3 sm:py-4 block sm:table-cell">
                         <span class="px-2 py-1 text-xs rounded-full ${t.paidAmount >= t.amount ? 'status-paid' : (t.paidAmount > 0 ? 'status-partial' : 'status-unpaid')}">
                             ${t.paidAmount >= t.amount ? 'Paid' : (t.paidAmount > 0 ? 'Partial' : 'Unpaid')}
                         </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onclick="editTransaction(${t.id})" class="text-blue-600 hover:text-blue-900 mr-3">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteTransaction(${t.id})" class="text-red-600 hover:text-red-900">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                    <td data-label="Actions" class="px-3 sm:px-6 py-3 sm:py-4 block sm:table-cell">
+                        <div class="flex space-x-2">
+                            <button onclick="editTransaction(${t.id})" class="bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-full p-2">
+                                <i class="fas fa-edit text-sm"></i>
+                            </button>
+                            <button onclick="deleteTransaction(${t.id})" class="bg-red-50 hover:bg-red-100 text-red-600 rounded-full p-2">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
